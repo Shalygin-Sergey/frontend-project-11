@@ -1,1 +1,3 @@
-console.log("Hello World!");
+import application from './application.js';
+
+application();
