@@ -1,26 +1,30 @@
-const renderPosts = (state, div) => {
+const renderPosts = (state, div, i18nInstance) => {
 	const ul = document.createElement('ul');
 	ul.classList.add('list-group', 'border-0', 'rounded-0');
 
-	state.posts.forEach((post) => {
+	state.contentValue.posts.forEach((post) => {
 		const li = document.createElement('li');
 		li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
 		const a = document.createElement('a');
-		a.classList.add('fw-bold');
+		//const aStyle = state.uiState.visitedLinksId.has(post.id) ? ('fw-normal', 'link-secondary') : 'fw-bold';
+		a.classList.add(state.uiState.visitedLinksId.has(post.id) ? ('fw-normal', 'link-secondary') : 'fw-bold');
 		a.setAttribute('href', post.link);
-		a.setAttribute('data-id', 'достать из post');
+		a.setAttribute('data-id', post.id);
 		a.setAttribute('targer', '_blank');
 		a.setAttribute('rel', 'noopener noreferrer');
-		a.textContent(post.description);
+		a.textContent = post.title;
 
 		const button = document.createElement('button');
 		button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
 		button.setAttribute('type', 'button');
-		button.setAttribute('data-id', 'достать из post');
+		button.setAttribute('data-id', post.id);
 		button.setAttribute('data-bs-toggle', 'modal');
 		button.setAttribute('data-bs-target', '#modal');
-		a.textContent('Просмотр');
+		button.textContent = i18nInstance.t('button');
+
+		li.append(a, button);
+		ul.append(li);
 	});
 
 	div.append(ul);
@@ -30,60 +34,79 @@ const renderFeeds = (state, div) => {
 	const ul = document.createElement('ul');
 	ul.classList.add('list-group', 'border-0', 'rounded-0');
 
-	state.feeds.forEach((feed) => {
+	state.contentValue.feeds.forEach((feed) => {
 		const li = document.createElement('li');
 		li.classList.add('list-group-item', 'border-0', 'border-end-0');
 
 		const h3 = document.createElement('h3');
 		h3.classList.add('h6', 'm-0');
-		h3.textContent(feed.title);
+		h3.textContent = feed.title;
 
 		const p = document.createElement('p');
 		p.classList.add('m-0', 'small', 'text-black-50');
-		p.textContent(feed.description);
+		p.textContent = feed.description;
 
-		li.append(h3);
-		li.append(p);
+		li.append(h3, p);
 		ul.append(li);
 	});
 
 	div.append(ul);
 };
 
-const createContainer = (type, state) => {
-	const divCardContainer = document.createElement('div');
-	if (type === 'posts') {
-		divCardContainer.classList.add('col-md-10', 'col-lg-8', 'order-1', 'mx-auto', 'posts');
-	} else {
-		divCardContainer.classList.add('col-md-10', 'col-lg-4', 'mx-auto', 'order-0', 'order-lg-1', 'feeds');
-	}
+const createContainer = (type, elements, state, i18nInstance) => {
+	elements[type].textContent = '';
 
 	const divCard = document.createElement('div');
 	divCard.classList.add('card', 'border-0');
 
 	const divCardBody = document.createElement('div');
 	divCardBody.classList.add('card-body');
-	if (type === 'posts') {
-		divCardBody.innerHTML('<h2 class="card-title h4">Посты</h2>');
-	} else {
-		divCardBody.innerHTML('<h2 class="card-title h4">Фиды</h2>');
-	}
 
+	const divCardBodyTitle = document.createElement('h2');
+	divCardBodyTitle.classList.add('card-title', 'h4');
+	divCardBodyTitle.textContent = i18nInstance.t(type);
+
+	divCardBody.append(divCardBodyTitle);
 	divCard.append(divCardBody);
-	divCardContainer.append(divCard);
+	elements[type].append(divCard);
 
-	if (type === 'posts') {
-		renderPosts(state, divCard);
-	} else {
-		renderFeeds(state, divCard);
-	}
+	if (type === 'posts') renderPosts(state, divCard, i18nInstance);
+	if (type === 'feeds') renderFeeds(state, divCard);
 };
 
-const handleSuccessFinish = (elements, state) => {
+const renderModalWindow = (elements, state, postId) => {
+	// const body = document.querySelector('body');
+	// body.classList.add('modal-open');
+	// body.setAttribute('style', 'overflow: hidden; padding-right: 15px;');
+
+	// const divBackdrop = document.createElement('div');
+	// divBackdrop.classList.add('modal-backdrop', 'fade', 'show');
+	// body.append(divBackdrop);
+
+	// const divModal = document.querySelector('modal');
+	// divModal.classList.add('show');
+	// divModal.removeAttribute('style', 'display: none;');
+	// divModal.setAttribute('style', 'display: block;');
+	// divModal.removeAttribute('aria-hidden', 'true');
+	// divModal.setAttribute('aria-modal', 'true');
+
+	const currentPost = state.contentValue.posts.find(({ id }) => id === postId);
+
+	const modalTitle = elements.modal.title;
+	modalTitle.textContent = currentPost.title;
+
+	const modalBody = elements.modal.body;
+	modalBody.textContent = currentPost.description;
+
+	const modalButton = elements.modal.button;
+	modalButton.setAttribute('href', currentPost.link);
+}
+
+const handlerSuccessFinish = (elements) => {
 	const feedbackField = elements.feedback;
 	feedbackField.classList.remove('text-danger');
 	feedbackField.classList.add('text-success');
-	feedbackField.textContent = 'RSS успешно загружен';
+	feedbackField.textContent = '';
 
 	const btn = elements.button;
 	btn.removeAttribute('disabled');
@@ -92,47 +115,66 @@ const handleSuccessFinish = (elements, state) => {
 	inputField.removeAttribute('readonly');
 	inputField.focus();
 
-	createContainer('posts', state);
-	createContainer('feeds', state);
+	//createContainer('feeds', state, i18nInstance);
+	//createContainer('posts', state, i18nInstance);
 };
 
-const handleFinishWitnError = (elements, state) => {
+const handlerFinishWitnError = (elements, error, i18nInstance) => {
+	const feedbackField = elements.feedback;
+	const btn = elements.button;
+	const inputField = elements.input;
 
+	feedbackField.classList.remove('text-success');
+	feedbackField.classList.add('text-danger');
+	feedbackField.textContent = i18nInstance.t(`${error.replace(/ /g, '')}`);
+
+	if (error !== 'Network Error') {
+		elements.input.classList.add('is-invalid');
+	}
+
+	btn.disabled = false;
+	inputField.disabled = false;
 };
 
-const handlerProcessState = (elements, state, processState) => {
-	switch (processState) {
-		case 'sucsess':
-			handleSuccessFinish(elements, state);
+const handlerProcessState = (elements, state, value, i18nInstance) => {
+	switch (value) {
+		case 'filling':
+			break;
+		case 'finished':
+			handlerSuccessFinish(elements);
 			break;
 		case 'error':
-			handleFinishWitnError(elements, state);
+			handlerFinishWitnError(elements, state.process.error, i18nInstance);
 			break;
 		case 'sending':
 			elements.button.getAttribute('disabled');
 			elements.input.getAttribute('readonly');
 			break;
 		default:
-			throw new Error(`Unknown process state: ${processState}`);
+			throw new Error(`Unknown process state: ${value}`);
 	}
 };
 
 export default (elements, state, i18nInstance) => (path, value) => {
 	switch (path) {
 		case 'process.processState':
-			handlerProcessState(elements, state, state.process.processState);
+			handlerProcessState(elements, state, value, i18nInstance);
 			break;
 
 		case 'process.error':
-			handleFinishWitnError();
+			handlerFinishWitnError(elements, state.process.error, i18nInstance);
+			break;
+
+		case 'uiState.modalId':
+			renderModalWindow(elements, state, value);
 			break;
 
 		case 'contentValue.posts':
-			createContainer('posts', state);
+			createContainer('posts', elements, state, i18nInstance);
 			break;
 
 		case 'contentValue.feeds':
-			createContainer('feeds', state);
+			createContainer('feeds', elements, state, i18nInstance);
 			break;
 
 		default:

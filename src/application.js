@@ -1,86 +1,115 @@
-import './styles.scss';
-import 'bootstrap';
-
 import onChange from 'on-change';
 import axios from 'axios';
-import { setLocale } from 'yup';
+import { string, setLocale } from 'yup';
 
 import uniqueId from 'lodash/uniqueId.js';
 import i18next from 'i18next';
 import resources from './locales/index.js';
 import render from './view.js';
-import validate from './validate.js';
 import parser from './parser.js';
 
 const defaultLanguage = 'ru';
+const timeout = 5000;
+
+const validate = (url, urlList) => {
+	const schema = string().trim().required().url().notOneOf(urlList);
+	return schema.validate(url);
+};
 
 const getAxiosResponse = (url) => {
-	const allOrigins = 'https://allorigins.hexlet.app';
+	const allOrigins = 'https://allorigins.hexlet.app/get';
 	const newUrl = new URL(allOrigins);
 	newUrl.searchParams.set('url', url);
-	newUrl.searchParams.set('disableCache', true); // флаг
+	newUrl.searchParams.set('disableCache', 'true');
 	return axios.get(newUrl);
 };
 
-const createPosts = (state, newPosts, id) => {
-	const preparedPosts = newPosts.forEach((post) => ({ ...post, id }));
-	const actualPosts = state.contentValue.posts.concat(preparedPosts);
-	return actualPosts;
+const createPosts = (state, newPosts, feedId) => {
+	const preparedPosts = newPosts.map((post) => ({ ...post, feedId, id: uniqueId() }));
+	state.contentValue.posts = [...state.contentValue.posts, ...preparedPosts];
+};
+
+const getNewPosts = (state) => {
+	const promises = state.contentValue.feeds
+		.map(({ link, feedId }) => getAxiosResponse(link)
+			.then((response) => {
+				const { posts } = parser(response.data.contents);
+				const addedPosts = state.contentValue.posts.map((post) => post.link);
+				const newPosts = posts.filter((post) => !addedPosts.includes(post.link));
+				if (newPosts.length > 0) {
+					createPosts(state, newPosts, feedId);
+				}
+				return Promise.resolve();
+			}));
+
+	Promise.allSettled(promises)
+		.finally(() => {
+			setTimeout(() => getNewPosts(state), timeout);
+		});
 };
 
 export default () => {
 	const i18nInstance = i18next.createInstance();
 	i18nInstance.init({
 		lng: defaultLanguage,
-		debug: false,
+		debug: true,
 		resources,
 	}).then(() => {
 		const elements = {
-			form: document.querySelector('.form'),
+			form: document.querySelector('.rss-form'),
 			input: document.querySelector('input[id="url-input"]'),
 			button: document.querySelector('button[type="submit"]'),
-			feedback: document.querySelector('p[class="feedback"]'),
-			feedsContainer: document.querySelector('.feeds'),
-			postsContainer: document.querySelector('.posts'),
-			modal: 1,
+			feedback: document.querySelector('.feedback'),
+			feeds: document.querySelector('.feeds'),
+			posts: document.querySelector('.posts'),
+			modal: {
+				modalWindow: document.querySelector('.modal'),
+				title: document.querySelector('.modal-title'),
+				body: document.querySelector('.modal-body'),
+				button: document.querySelector('.full-article'),
+			},
 		};
+
+		setLocale({
+			mixed: {
+				notOneOf: 'errors.doubleRss',
+			},
+			string: {
+				url: 'errors.invalidUrl',
+			},
+		});
 
 		const initialState = {
 			valid: true,
-			// errors: {},
-			// url: '',
 			inputValue: '',
-			fieldUi: {
-				url: false,
-			},
 			process: {
 				processState: 'filling',
-				error: null,
+				error: '',
 			},
 			contentValue: {
 				posts: [],
 				feeds: [],
 			},
+			uiState: {
+				visitedLinksId: new Set(),
+				modalId: '',
+			},
 		};
 
 		const watchedState = onChange(initialState, render(elements, initialState, i18nInstance));
+		getNewPosts(watchedState);
 
 		elements.form.addEventListener('input', (e) => {
 			e.preventDefault();
-			const data = new FormData(e.target);
-			const url = data.get('url').trim();
-			// посмотреть что внутри формдата
-			// почему берем ключ именно урл?
-			// накапливаем влью в сстейте и когда сабмит- проверяем сразу в функции валидейт
-			watchedState.inputValue = url;
-			watchedState.contentValue.state = 'filling';
-			// не изменение в инпуте
+			watchedState.process.processState = 'filling';
+			watchedState.inputValue = e.target.value;
 		});
 
 		elements.form.addEventListener('submit', (e) => {
 			e.preventDefault();
+			const urlList = watchedState.contentValue.feeds.map(({ link }) => link);
 
-			validate(watchedState, watchedState.inputValue)
+			validate(watchedState.inputValue, urlList)
 				.then(() => {
 					watchedState.valid = true;
 					watchedState.process.processState = 'sending';
@@ -91,16 +120,34 @@ export default () => {
 					const { feed, posts } = parser(content);
 					const feedId = uniqueId();
 
-					watchedState.contentValue.feeds.push({ ...feed, feedId });
+					// watchedState.contentValue.feeds = [...watchedState.contentValue.feeds, { ...feed, feedId, link: watchedState.inputValue }];
+					// createPosts(watchedState, posts, feedId);
+					// watchedState.process.processState = 'finished';
+
+					// render(elements, watchedState, i18nInstance);
+
+					watchedState.contentValue.feeds.push({ ...feed, feedId, link: watchedState.inputValue });
 					createPosts(watchedState, posts, feedId);
 
-					watchedState.process.processState = 'sucsess';
+					watchedState.process.processState = 'finished';
 				})
-				.catch(() => {
+				.catch((error) => {
 					watchedState.valid = false;
-					watchedState.process.error = 'Error';
+					watchedState.process.error = error.message ?? 'defaultError';
+
 					watchedState.process.processState = 'error';
 				});
 		});
+
+		elements.posts.addEventListener('click', (e) => {
+			const currentPostId = e.target.dataset.id;
+			watchedState.uiState.visitedLinksId.add(currentPostId);
+		})
+
+		elements.modal.modalWindow.addEventListener('show.bs.modal', (e) => {
+			const currentPostId = e.relatedTarget.dataset.id;
+			watchedState.uiState.visitedLinksId.add(currentPostId);
+			watchedState.uiState.modalId = currentPostId;
+		})
 	});
 };

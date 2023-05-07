@@ -4,6 +4,10 @@
   "description": "My webpack project",
   "main": "index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shalygin-Sergey/frontend-project-11.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode=production --node-env=production",
@@ -12,9 +16,12 @@
     "watch": "webpack --watch",
     "serve": "webpack serve"
   },
-  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Shalygin-Sergey/frontend-project-11/issues"
+  },
   "author": "Shalygin-Sergey",
   "license": "ISC",
+  "homepage": "https://github.com/Shalygin-Sergey/frontend-project-11#readme",
   "devDependencies": {
     "@webpack-cli/generators": "^3.0.1",
     "html-webpack-plugin": "^5.5.0",
