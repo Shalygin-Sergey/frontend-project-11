@@ -26,15 +26,15 @@ const getAxiosResponse = (url) => {
 
 const createPosts = (state, newPosts, feedId) => {
 	const preparedPosts = newPosts.map((post) => ({ ...post, feedId, id: uniqueId() }));
-	state.contentValue.posts = [...state.contentValue.posts, ...preparedPosts];
+	state.content.posts = [...state.content.posts, ...preparedPosts];
 };
 
 const getNewPosts = (state) => {
-	const promises = state.contentValue.feeds
+	const promises = state.content.feeds
 		.map(({ link, feedId }) => getAxiosResponse(link)
 			.then((response) => {
 				const { posts } = parser(response.data.contents);
-				const addedPosts = state.contentValue.posts.map((post) => post.link);
+				const addedPosts = state.content.posts.map((post) => post.link);
 				const newPosts = posts.filter((post) => !addedPosts.includes(post.link));
 				if (newPosts.length > 0) {
 					createPosts(state, newPosts, feedId);
@@ -86,12 +86,12 @@ export default () => {
 				processState: 'filling',
 				error: '',
 			},
-			contentValue: {
+			content: {
 				posts: [],
 				feeds: [],
 			},
 			uiState: {
-				visitedLinksId: new Set(),
+				visitedLinksIds: new Set(),
 				modalId: '',
 			},
 		};
@@ -102,54 +102,46 @@ export default () => {
 		elements.form.addEventListener('input', (e) => {
 			e.preventDefault();
 			watchedState.process.processState = 'filling';
-			//console.log(e.target.value)
 			watchedState.inputValue = e.target.value;
-			//console.log(watchedState.inputValue)
 		});
 
 		elements.form.addEventListener('submit', (e) => {
 			e.preventDefault();
-			const urlList = watchedState.contentValue.feeds.map(({ link }) => link);
+			const urlList = watchedState.content.feeds.map(({ link }) => link);
 
 			validate(watchedState.inputValue, urlList)
 				.then(() => {
 					watchedState.valid = true;
 					watchedState.process.processState = 'sending';
-					// e.target.value = '';
 					return getAxiosResponse(watchedState.inputValue);
 				})
 				.then((response) => {
-					const content = response.data.contents;
-					const { feed, posts } = parser(content, i18nInstance, elements);
+					const data = response.data.contents;
+					const { feed, posts } = parser(data, i18nInstance, elements);
 					const feedId = uniqueId();
-					//console.log(1)
 
-					watchedState.contentValue.feeds.push({ ...feed, feedId, link: watchedState.inputValue });
+					watchedState.content.feeds.push({ ...feed, feedId, link: watchedState.inputValue });
 					createPosts(watchedState, posts, feedId);
 
-					//e.target.value = '';
-					// watchedState.inputValue = ''
 					watchedState.process.processState = 'finished';
 				})
 				.catch((error) => {
-					// watchedState.valid = false;
+					watchedState.valid = false;
 					watchedState.process.error = error.message ?? 'defaultError';
-					console.log(error)
 					watchedState.process.processState = 'error';
 				});
 		});
 
 		elements.modal.modalWindow.addEventListener('show.bs.modal', (e) => {
 			const currentPostId = e.relatedTarget.getAttribute('data-id');
-			watchedState.uiState.visitedLinksId.add(currentPostId);
+			watchedState.uiState.visitedLinksIds.add(currentPostId);
 			watchedState.uiState.modalId = currentPostId;
 		})
 
 		elements.posts.addEventListener('click', (e) => {
 			const currentPostId = e.target.dataset.id;
-
-			if(currentPostId) {
-				watchedState.uiState.visitedLinksId.add(currentPostId);
+			if (currentPostId) {
+				watchedState.uiState.visitedLinksIds.add(currentPostId);
 			}
 		})
 	});
