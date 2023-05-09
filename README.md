@@ -26,5 +26,9 @@ npm link
 
 3. Install the RSS reader using the following commands:
 ```sh
-make build
+npm run build
+```
+
+```sh
+npx webpack serve
 ```
