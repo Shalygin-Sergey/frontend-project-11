@@ -110,7 +110,7 @@ const handlerFinishWithError = (elements, error, i18nInstance) => {
 	elements.feedback.classList.add('text-danger');
 	elements.feedback.textContent = i18nInstance.t(`errors.${error.replace(/ /g, '')}`);
 
-	if (error !== ('Network Error' || 'Ошибка сети')) {
+	if (error !== 'Network Error') {
 		elements.input.classList.add('is-invalid');
 	}
 
