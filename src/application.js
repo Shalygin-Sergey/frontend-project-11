@@ -46,6 +46,7 @@ const getNewPosts = (state) => {
 		.finally(() => {
 			setTimeout(() => getNewPosts(state), timeout);
 		});
+	setTimeout(() => getNewPosts(state), timeout);
 };
 
 export default () => {
