@@ -1,6 +1,6 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/Shalygin-Sergey/frontend-project-11/workflows/hexlet-check/badge.svg)](https://github.com/Shalygin-Sergey/frontend-project-11/actions)
-[![Maintainability](https://api.codeclimate.com/v1/badges/cdabed18eb99bf6a35db/maintainability)](https://codeclimate.com/github/Shalygin-Sergey/frontend-project-lvl1/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5c32d39597561f342497/maintainability)](https://codeclimate.com/github/Shalygin-Sergey/frontend-project-11/maintainability)
 
 [RSS Agregator](https://frontend-project-11-gray-delta.vercel.app/) – a service for aggregating RSS feeds, with which it is convenient to read a variety of sources, such as blogs. It allows you to add an unlimited number of RSS feeds, updates them itself and adds new entries to the general feed.
 
