@@ -9,7 +9,7 @@ import render from './view.js';
 import parser from './parser.js';
 
 const defaultLanguage = 'ru';
-const timeout = 5000;
+const timeout = 7000;
 
 const validate = (url, urlList) => {
 	const schema = string().trim().required().url().notOneOf(urlList);
@@ -46,7 +46,7 @@ const getNewPosts = (state) => {
 		.finally(() => {
 			setTimeout(() => getNewPosts(state), timeout);
 		});
-	setTimeout(() => getNewPosts(state), timeout);
+	// setTimeout(() => getNewPosts(state), timeout);
 };
 
 export default () => {
