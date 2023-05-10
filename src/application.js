@@ -74,7 +74,7 @@ export default () => {
       {
         mixed: { notOneOf: 'doubleRss' },
         string: { url: 'invalidUrl' },
-      }
+      },
     );
 
     const initialState = {
