@@ -71,10 +71,10 @@ export default () => {
     };
 
     setLocale(
-    {
-      mixed: { notOneOf: 'doubleRss' },
-      string: { url: 'invalidUrl' },
-    });
+      {
+        mixed: { notOneOf: 'doubleRss' },
+        string: { url: 'invalidUrl' },
+      });
 
     const initialState = {
       valid: true,
