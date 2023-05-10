@@ -12,7 +12,11 @@ const defaultLanguage = 'ru';
 const timeout = 5000;
 
 const validate = (url, urlList) => {
-  const schema = string().trim().required().url().notOneOf(urlList);
+  const schema = string()
+    .trim()
+    .required()
+    .url()
+    .notOneOf(urlList);
   return schema.validate(url);
 };
 
