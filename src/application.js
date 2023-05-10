@@ -70,8 +70,8 @@ export default () => {
       },
     };
 
-    setLocale({
-      // eslint-disable-next-line
+    setLocale(
+    {
       mixed: { notOneOf: 'doubleRss' },
       string: { url: 'invalidUrl' },
     });
