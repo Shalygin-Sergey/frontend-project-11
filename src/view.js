@@ -126,7 +126,7 @@ const handlerProcessState = (elements, state, value, i18nInstance) => {
 			handlerSuccessFinish(elements, i18nInstance);
 			break;
 		case 'error':
-			handlerFinishWithError(elements, state.process.error, i18nInstance);
+			handlerFinishWithError(elements, state.process.errors, i18nInstance);
 			break;
 		case 'sending':
 			elements.button.getAttribute('disabled');
@@ -144,7 +144,7 @@ export default (elements, state, i18nInstance) => (path, value) => {
 			break;
 
 		case 'process.error':
-			handlerFinishWithError(elements, state.process.error, i18nInstance);
+			handlerFinishWithError(elements, state.process.errors, i18nInstance);
 			break;
 
 		case 'uiState.modalId':
