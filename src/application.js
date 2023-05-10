@@ -71,7 +71,9 @@ export default () => {
     };
 
     setLocale({
-      mixed: { notOneOf: 'doubleRss' },
+      mixed: {
+        notOneOf: 'doubleRss'
+      },
       string: { url: 'invalidUrl' },
     });
 
