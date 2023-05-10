@@ -71,12 +71,8 @@ export default () => {
     };
 
     setLocale({
-      mixed: {
-        notOneOf: 'doubleRss',
-      },
-      string: {
-        url: 'invalidUrl',
-      },
+      mixed: { notOneOf: 'doubleRss' },
+      string: { url: 'invalidUrl' },
     });
 
     const initialState = {
@@ -136,13 +132,13 @@ export default () => {
       const currentPostId = e.relatedTarget.getAttribute('data-id');
       watchedState.uiState.visitedLinksIds.add(currentPostId);
       watchedState.uiState.modalId = currentPostId;
-    })
+    });
 
     elements.posts.addEventListener('click', (e) => {
       const currentPostId = e.target.dataset.id;
       if (currentPostId) {
         watchedState.uiState.visitedLinksIds.add(currentPostId);
       }
-    })
+    });
   });
 };
