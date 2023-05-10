@@ -138,6 +138,7 @@ const handlerProcessState = (elements, state, value, i18nInstance) => {
 };
 
 export default (elements, state, i18nInstance) => (path, value) => {
+
 	switch (path) {
 		case 'process.processState':
 			handlerProcessState(elements, state, value, i18nInstance);
